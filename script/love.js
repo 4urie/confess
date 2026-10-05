@@ -160,25 +160,47 @@ function init() {
 
 function continueMusic() {
   const music = document.getElementById("backgroundMusic");
+  if (!music) return;
+  music.volume = 0.8;
 
   const isMusicPlaying = localStorage.getItem("musicPlaying") === "true";
   const musicCurrentTime = localStorage.getItem("musicCurrentTime") || 0;
 
-  if (music) {
-    if (isMusicPlaying) {
-      music.currentTime = parseFloat(musicCurrentTime);
-      music.play().catch((error) =>
-        console.log("Music playback failed", error)
-      );
-    }
+  if (isMusicPlaying) {
+    music.currentTime = parseFloat(musicCurrentTime);
+    music.play().catch((error) =>
+      console.log("Music playback failed", error)
+    );
   }
 
-  document.addEventListener("click", function startMusic() {
-    if (music && !isMusicPlaying) {
-      music.play().catch((error) => console.log("Autoplay prevented", error));
-      document.removeEventListener("click", startMusic);
-    }
+  music.addEventListener("play", () => {
+    localStorage.setItem("musicPlaying", "true");
   });
+
+  music.addEventListener("pause", () => {
+    localStorage.setItem("musicPlaying", "false");
+  });
+
+  setInterval(() => {
+    localStorage.setItem("musicCurrentTime", music.currentTime);
+  }, 1000);
+
+  function startMusic() {
+    music.play().then(() => {
+      localStorage.setItem("musicPlaying", "true");
+      removeMusicStartListeners();
+    }).catch((error) => console.log("Autoplay prevented", error));
+  }
+
+  function removeMusicStartListeners() {
+    document.removeEventListener("pointerdown", startMusic);
+    document.removeEventListener("touchstart", startMusic);
+    document.removeEventListener("click", startMusic);
+  }
+
+  document.addEventListener("pointerdown", startMusic);
+  document.addEventListener("touchstart", startMusic);
+  document.addEventListener("click", startMusic);
 }
 
 document.addEventListener("DOMContentLoaded", function () {

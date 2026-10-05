@@ -164,6 +164,7 @@ window.onload = function() {
 function setupMusic() {
     const music = document.getElementById('backgroundMusic');
     if (!music) return;
+    music.volume = 0.8;
 
     if (!localStorage.getItem('initialLoad')) {
         clearMusicState();
@@ -191,12 +192,24 @@ function setupMusic() {
         localStorage.setItem('musicCurrentTime', music.currentTime);
     }, 1000);
 
-    document.addEventListener('click', function startMusic() {
-        music.play().catch(error => {
+    function startMusic() {
+        music.play().then(() => {
+            localStorage.setItem('musicPlaying', 'true');
+            removeMusicStartListeners();
+        }).catch(error => {
             console.log('Autoplay prevented', error);
         });
+    }
+
+    function removeMusicStartListeners() {
+        document.removeEventListener('pointerdown', startMusic);
+        document.removeEventListener('touchstart', startMusic);
         document.removeEventListener('click', startMusic);
-    });
+    }
+
+    document.addEventListener('pointerdown', startMusic);
+    document.addEventListener('touchstart', startMusic);
+    document.addEventListener('click', startMusic);
 }
 
 document.addEventListener('DOMContentLoaded', setupMusic);
